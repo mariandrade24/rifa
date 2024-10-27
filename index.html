@@ -123,16 +123,18 @@
             return;
         }
 
-        // Corrige o número a ser salvo baseado na cartela atual
-        const adjustedNumbers = selectedNumbers.map(num => {
-            return currentRange === 2 ? num + 100 : num; // Adiciona 100 se na cartela 101-200
-        });
+        const adjustedNumbers = selectedNumbers.map(num => currentRange === 2 ? num + 100 : num); // Ajusta a faixa para salvar corretamente
 
         db.collection("rifa").doc('selecionados').set({
             numbers: firebase.firestore.FieldValue.arrayUnion(...adjustedNumbers)
         }, { merge: true })
-            .then(() => alert("Seleção salva com sucesso!"))
-            .catch(error => console.error("Erro ao salvar a seleção: ", error));
+            .then(() => {
+                console.log("Seleção salva com sucesso!", adjustedNumbers);
+                alert("Seleção salva com sucesso!");
+            })
+            .catch(error => {
+                console.error("Erro ao salvar a seleção: ", error);
+            });
     });
 
     // Função para carregar as seleções do Firestore
@@ -142,10 +144,13 @@
                 if (doc.exists) {
                     const data = doc.data();
                     const savedNumbers = data.numbers || [];
+                    console.log("Números carregados do Firebase: ", savedNumbers);
+
                     // Limpa seleções anteriores antes de marcar
                     document.querySelectorAll('.number').forEach(div => div.classList.remove('selected'));
                     savedNumbers.forEach(num => {
-                        const numberDiv = document.querySelector(`.number:nth-child(${num - (currentRange === 2 ? 100 : 0)})`);
+                        const displayNum = currentRange === 2 ? num - 100 : num;
+                        const numberDiv = document.querySelector(`.number:nth-child(${displayNum})`);
                         if (numberDiv) {
                             numberDiv.classList.add('selected'); // Marca os números já selecionados
                         }
