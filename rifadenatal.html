@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartela de Rifa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f3f3f3;
+        }
+        h1 {
+            margin: 10px 0;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(10, 50px);
+            gap: 10px;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+        .number {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 50px;
+            height: 50px;
+            font-size: 16px;
+            background-color: #fff;
+            border: 2px solid #007BFF;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .number.selected {
+            background-color: #007BFF;
+            color: #fff;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<h1>Rifa Corpo de Baile</h1>
+<div id="number-container" class="container"></div>
+<button id="toggleButton">Ir para a cartela 101-200</button>
+<button id="saveSelection">Salvar Seleção</button>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyA9H3uhTmiHVCcWTJBSFyWRNTuEyPi7H0o",
+        authDomain: "rifa-corpo-de-baile.firebaseapp.com",
+        projectId: "rifa-corpo-de-baile",
+        storageBucket: "rifa-corpo-de-baile.appspot.com",
+        messagingSenderId: "190411997880",
+        appId: "1:190411997880:web:67dbfaa8165d8bc4e72a4d",
+        measurementId: "G-PTJJB2Y22W"
+    };
+
+    // Inicializa o Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const numberContainer = document.getElementById('number-container');
+    let currentRange = 1; // 1 para 1-100, 2 para 101-200
+
+    // Função para gerar os números
+    function generateNumbers(start, end) {
+        numberContainer.innerHTML = ''; // Limpa os números existentes
+        for (let i = start; i <= end; i++) {
+            const numberDiv = document.createElement('div');
+            numberDiv.classList.add('number');
+            numberDiv.textContent = i;
+
+            // Adiciona um evento de clique para marcar o número
+            numberDiv.addEventListener('click', () => {
+                numberDiv.classList.toggle('selected');
+            });
+
+            numberContainer.appendChild(numberDiv);
+        }
+    }
+
+    // Função para alternar entre as cartelas
+    function toggleRange() {
+        currentRange = currentRange === 1 ? 2 : 1; // Alterna entre 1 e 2
+        if (currentRange === 1) {
+            generateNumbers(1, 100);
+            document.getElementById('toggleButton').textContent = "Ir para a cartela 101-200";
+        } else {
+            generateNumbers(101, 200);
+            document.getElementById('toggleButton').textContent = "Ir para a cartela 1-100";
+        }
+        loadSelections(); // Carrega seleções a cada troca
+    }
+
+    // Função para salvar seleção no Firebase
+    document.getElementById('saveSelection').addEventListener('click', () => {
+        const selectedNumbers = Array.from(document.querySelectorAll('.number.selected')).map(div => parseInt(div.textContent));
+        if (selectedNumbers.length === 0) {
+            alert("Por favor, selecione pelo menos um número.");
+            return;
+        }
+
+        // Corrige o número a ser salvo baseado na cartela atual
+        const adjustedNumbers = selectedNumbers.map(num => {
+            return currentRange === 1 ? num : num + 100; // Adiciona 100 se na cartela 101-200
+        });
+
+        db.collection("rifa").doc('selecionados').set({
+            numbers: adjustedNumbers
+        })
+            .then(() => alert("Seleção salva com sucesso!"))
+            .catch(error => console.error("Erro ao salvar a seleção: ", error));
+    });
+
+    // Função para carregar as seleções do Firestore
+    function loadSelections() {
+        db.collection("rifa").doc('selecionados').get()
+            .then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    const savedNumbers = data.numbers || [];
+                    // Limpa seleções anteriores antes de marcar
+                    document.querySelectorAll('.number').forEach(div => div.classList.remove('selected'));
+                    savedNumbers.forEach(num => {
+                        const numberDiv = document.querySelector(`.number:nth-child(${num - (currentRange === 2 ? 100 : 0)})`);
+                        if (numberDiv) {
+                            numberDiv.classList.add('selected'); // Marca os números já selecionados
+                        }
+                    });
+                }
+            })
+            .catch(error => console.error("Erro ao carregar seleções: ", error));
+    }
+
+    // Gera números inicialmente e configura o evento de alternância
+    generateNumbers(1, 100);
+    document.getElementById('toggleButton').addEventListener('click', toggleRange);
+
+    // Carrega as seleções quando a página é carregada
+    window.onload = loadSelections;
+</script>
+</body>
+</html>
