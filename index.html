@@ -69,13 +69,13 @@
 <script>
     // Configuração do Firebase
     const firebaseConfig = {
-        apiKey: "AIzaSyA9H3uhTmiHVCcWTJBSFyWRNTuEyPi7H0o",
-        authDomain: "rifa-corpo-de-baile.firebaseapp.com",
-        projectId: "rifa-corpo-de-baile",
-        storageBucket: "rifa-corpo-de-baile.appspot.com",
-        messagingSenderId: "190411997880",
-        appId: "1:190411997880:web:67dbfaa8165d8bc4e72a4d",
-        measurementId: "G-PTJJB2Y22W"
+        apiKey: "API_KEY_AQUI",
+        authDomain: "DOMINIO_FIREBASE",
+        projectId: "ID_PROJETO_FIREBASE",
+        storageBucket: "BUCKET",
+        messagingSenderId: "SENDER_ID",
+        appId: "APP_ID",
+        measurementId: "MEASUREMENT_ID"
     };
 
     // Inicializa o Firebase
@@ -125,12 +125,12 @@
 
         // Corrige o número a ser salvo baseado na cartela atual
         const adjustedNumbers = selectedNumbers.map(num => {
-            return currentRange === 1 ? num : num + 100; // Adiciona 100 se na cartela 101-200
+            return currentRange === 2 ? num + 100 : num; // Adiciona 100 se na cartela 101-200
         });
 
         db.collection("rifa").doc('selecionados').set({
-            numbers: adjustedNumbers
-        })
+            numbers: firebase.firestore.FieldValue.arrayUnion(...adjustedNumbers)
+        }, { merge: true })
             .then(() => alert("Seleção salva com sucesso!"))
             .catch(error => console.error("Erro ao salvar a seleção: ", error));
     });
