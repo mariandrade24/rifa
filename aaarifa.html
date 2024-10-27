@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartela de Rifa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f3f3f3;
+        }
+        h1, h2 {
+            margin: 10px 0; /* Espaçamento entre os títulos e outros elementos */
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(10, 50px);
+            gap: 10px;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+        .number {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 50px;
+            height: 50px;
+            font-size: 16px;
+            background-color: #fff;
+            border: 2px solid #007BFF;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .number.selected {
+            background-color: #007BFF;
+            color: #fff;
+        }
+        .selected-numbers {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<h1>Escolha seus números para a rifa</h1>
+<h2>Rifa Corpo de Baile</h2>
+<input type="text" id="userName" placeholder="Digite seu nome" style="margin-bottom: 20px;"> <!-- Campo de entrada -->
+<div class="container" id="cartela"></div> <!-- Contêiner para os números -->
+<button id="saveSelection" style="margin-top: 20px;">Salvar Seleção</button> <!-- Botão de salvar -->
+<div class="selected-numbers"></div> <!-- Exibição dos números selecionados -->
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyA9H3uhTmiHVCcWTJBSFyWRNTuEyPi7H0o",
+        authDomain: "rifa-corpo-de-baile.firebaseapp.com",
+        projectId: "rifa-corpo-de-baile",
+        storageBucket: "rifa-corpo-de-baile.appspot.com",
+        messagingSenderId: "190411997880",
+        appId: "1:190411997880:web:67dbfaa8165d8bc4e72a4d",
+        measurementId: "G-PTJJB2Y22W"
+    };
+
+    // Inicializa o Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const container = document.getElementById('cartela');
+
+    // Gera os números de 1 a 200
+    for (let i = 1; i <= 200; i++) {
+        const numberDiv = document.createElement('div');
+        numberDiv.classList.add('number');
+        numberDiv.textContent = i;
+
+        // Adiciona um evento de clique para marcar o número
+        numberDiv.addEventListener('click', () => {
+            numberDiv.classList.toggle('selected');
+            displaySelectedNumbers(); // Atualiza a lista de números selecionados
+        });
+
+        container.appendChild(numberDiv);
+    }
+
+    // Função para exibir os números selecionados
+    function displaySelectedNumbers() {
+        const selectedNumbers = Array.from(document.querySelectorAll('.number.selected')).map(div => div.textContent);
+        const selectedNumbersDisplay = document.querySelector('.selected-numbers');
+
+        // Atualiza a exibição dos números selecionados
+        selectedNumbersDisplay.innerHTML = `<strong>Números Selecionados:</strong> ${selectedNumbers.join(', ')}`;
+    }
+
+    // Função para salvar seleção no Firebase
+    document.getElementById('saveSelection').addEventListener('click', () => {
+        const userName = document.getElementById('userName').value;
+        if (!userName) {
+            alert("Por favor, insira seu nome.");
+            return;
+        }
+
+        const selectedNumbers = Array.from(document.querySelectorAll('.number.selected')).map(div => parseInt(div.textContent));
+        db.collection("rifa").doc(userName).set({
+            name: userName,
+            numbers: selectedNumbers
+        })
+            .then(() => {
+                alert("Seleção salva com sucesso!");
+                displaySelectedNumbers(); // Atualiza a lista de números selecionados após salvar
+            })
+            .catch(error => console.error("Erro ao salvar a seleção: ", error));
+    });
+</script>
+</body>
+</html>
